@@ -1,0 +1,1 @@
+https://www.merixstudio.com/blog/best-practices-rest-api-development/

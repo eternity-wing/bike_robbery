@@ -1,0 +1,176 @@
+<?php
+
+namespace App\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
+
+/**
+ * @ORM\Entity(repositoryClass="App\Repository\BikeRepository")
+ * @UniqueEntity("licenseNumber")
+ */
+class Bike
+{
+    /**
+     * @ORM\Id()
+     * @ORM\GeneratedValue()
+     * @ORM\Column(type="integer")
+     */
+    private $id;
+
+    /**
+     * @ORM\Column(type="string", length=255, unique=true)
+     */
+    private $licenseNumber;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank()
+     * @Assert\NotNull()
+     */
+    private $color;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank()
+     * @Assert\NotNull()
+     */
+    private $type;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank()
+     * @Assert\NotNull()
+     */
+    private $ownerFullName;
+
+    /**
+     * @ORM\Column(type="datetime")
+     * @Assert\NotBlank()
+     * @Assert\NotNull()
+     */
+    private $stealingDate;
+
+    /**
+     * @ORM\Column(type="text")
+     * @Assert\NotBlank()
+     * @Assert\NotNull()
+     */
+    private $stealingDescription;
+
+    /**
+     * @ORM\Column(type="boolean", options={"default":0})
+     */
+    private $isResolved=false;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Entity\Police", inversedBy="bikes")
+     */
+    private $responsible;
+
+
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getLicenseNumber(): ?string
+    {
+        return $this->licenseNumber;
+    }
+
+    public function setLicenseNumber(string $licenseNumber): self
+    {
+        $this->licenseNumber = $licenseNumber;
+
+        return $this;
+    }
+
+    public function getColor(): ?string
+    {
+        return $this->color;
+    }
+
+    public function setColor(string $color): self
+    {
+        $this->color = $color;
+
+        return $this;
+    }
+
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): self
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    public function getOwnerFullName(): ?string
+    {
+        return $this->ownerFullName;
+    }
+
+    public function setOwnerFullName(string $ownerFullName): self
+    {
+        $this->ownerFullName = $ownerFullName;
+
+        return $this;
+    }
+
+    public function getStealingDate(): ?\DateTimeInterface
+    {
+        return $this->stealingDate;
+    }
+
+    public function setStealingDate(\DateTimeInterface $stealingDate): self
+    {
+        $this->stealingDate = $stealingDate;
+
+        return $this;
+    }
+
+    public function getStealingDescription(): ?string
+    {
+        return $this->stealingDescription;
+    }
+
+    public function setStealingDescription(string $stealingDescription): self
+    {
+        $this->stealingDescription = $stealingDescription;
+
+        return $this;
+    }
+
+    public function getIsResolved(): ?bool
+    {
+        return $this->isResolved;
+    }
+
+    public function setIsResolved(bool $isResolved): self
+    {
+        $this->isResolved = $isResolved;
+
+        return $this;
+    }
+
+    public function getResponsible(): ?Police
+    {
+        return $this->responsible;
+    }
+
+    public function setResponsible(?Police $responsible): self
+    {
+        $this->responsible = $responsible;
+
+        return $this;
+    }
+
+
+}
