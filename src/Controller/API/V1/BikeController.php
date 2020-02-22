@@ -24,9 +24,10 @@ class BikeController extends BaseController
     /**
      * @Route("/", name="api_v1_bikes_index", methods={"GET"})
      */
-    public function index(Request $request, BikeRepository $bikeRepository, Paginator $paginator){
+    public function index(Request $request, BikeRepository $bikeRepository, Paginator $paginator)
+    {
         $queryParameters = $request->query->all();
-        $filters=[];
+        $filters = [];
         $query = $bikeRepository->getFilterableQuery($filters);
 
         $offset = $request->query->getInt('offset', 1);
@@ -37,29 +38,30 @@ class BikeController extends BaseController
     /**
      * @Route("/", name="api_v1_bikes_new", methods={"POST"})
      */
-    public function new(Request $request){
+    public function new(Request $request)
+    {
         $bike = new Bike();
         $form = $this->createForm(BikeType::class, $bike);
         $this->processForm($request, $form);
-        if($form->isSubmitted() && $form->isValid()){
+        if ($form->isSubmitted() && $form->isValid()) {
             $em = $this->getDoctrine()->getManager();
-            $em->getConnection()->beginTransaction(); // suspend auto-commit
-            try {
-                $availableOfficer = $em->getRepository(Police::class)->findOneBy(['isAvailable' => true]);
-                if($availableOfficer){
+            $em->persist($bike);
+            $em->flush();
+            $availableOfficer = $em->getRepository(Police::class)->findOneBy(['isAvailable' => true]);
+            if ($availableOfficer) {
+                $em->getConnection()->beginTransaction(); // suspend auto-commit
+                try {
                     $availableOfficer->setIsAvailable(false);
                     $bike->setResponsible($availableOfficer);
+                    $em->getConnection()->commit();
+                    $em->refresh($bike);
+                    return $this->createApiResponse($bike);
+                } catch (\Exception $e) {
+                    $em->getConnection()->rollBack();
+                    return $this->createApiResponse($bike, 400);
                 }
-                $em->persist($bike);
-                $em->flush();
-                $em->getConnection()->commit();
-                $em->refresh($bike);
-                return $this->createApiResponse($bike);
-            } catch (\Exception $e) {
-                $em->getConnection()->rollBack();
-                return $this->createApiResponse($bike, 400);
             }
-        }else{
+        } else {
             $errors = $this->getErrorsFromForm($form);
             return $this->createApiResponse($errors, 400);
         }
@@ -69,9 +71,10 @@ class BikeController extends BaseController
     /**
      * @Route("/{id}/respolve", name="api_v1_bikes_resolve", methods={"POST"})
      */
-    public function resolve(Bike $bike){
+    public function resolve(Bike $bike)
+    {
         $isNotResolvedYet = $bike->getIsResolved() != true;
-        if($isNotResolvedYet){
+        if ($isNotResolvedYet) {
             $bike->setIsResolved(true);
             $responsibleOfficer = $bike->getResponsible();
             $responsibleOfficer->setIsAvailable(true);
