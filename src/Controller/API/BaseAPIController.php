@@ -4,11 +4,13 @@
 namespace App\Controller\API;
 
 use App\Exception\TransactionException;
+use JMS\Serializer\SerializationContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Serializer\SerializerInterface;
+use JMS\Serializer\SerializerBuilder;
+use JMS\Serializer\Serializer;
 
 /**
  * Class BaseAPIController
@@ -23,23 +25,22 @@ class BaseAPIController extends AbstractController
     const DEFAULT_PAGE_SIZE = 25;
 
     /**
-     * @var SerializerInterface
+     * @var Serializer
      */
     private $serializer;
 
     /**
      * BaseAPIController constructor.
-     * @param SerializerInterface $serializer
      */
-    public function __construct(SerializerInterface $serializer)
+    public function __construct()
     {
-        $this->serializer = $serializer;
+        $this->serializer = SerializerBuilder::create()->build();
     }
 
     /**
-     * @return SerializerInterface
+     * @return Serializer
      */
-    public function getSerializer(): SerializerInterface
+    public function getSerializer(): Serializer
     {
         return $this->serializer;
     }
@@ -47,14 +48,28 @@ class BaseAPIController extends AbstractController
     /**
      * @param mixed $data Any data
      * @param int $statusCode
+     * @param array $groups
      * @return Response
      */
     public function createApiResponse($data, int $statusCode = 200, array $groups = ['Default']): Response
     {
-        $json = $this->getSerializer()->serialize($data, 'json', $groups);
+        $json = $this->serialize($data, $groups);
         return new Response($json, $statusCode, ['Content-Type' => 'application/json']);
     }
 
+
+    /**
+     * @param mixed $data Any data
+     * @param array $groups
+     * @return string
+     */
+    public function serialize($data, $groups = ['Default'])
+    {
+        $context = new SerializationContext();
+        $context->setSerializeNull(true);
+        $context->setGroups($groups);
+        return $this->getSerializer()->serialize($data, 'json', $context);
+    }
 
     /**
      * @param Request $request
@@ -84,9 +99,9 @@ class BaseAPIController extends AbstractController
         $formFields = array_keys($filterForm->all());
         $queryParameters = $request->query->all();
 
-        $rawFilters = array_filter($queryParameters, static function ($value, $key) use ($formFields){
+        $rawFilters = array_filter($queryParameters, static function ($value, $key) use ($formFields) {
             return in_array($key, $formFields, true);
-        },ARRAY_FILTER_USE_BOTH);
+        }, ARRAY_FILTER_USE_BOTH);
 
         $clearMissing = $request->getMethod() != 'PATCH';
         $filterForm->submit($rawFilters, $clearMissing);

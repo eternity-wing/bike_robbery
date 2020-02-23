@@ -7,10 +7,12 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
+use JMS\Serializer\Annotation as JMS;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\PoliceRepository")
  * @UniqueEntity("personalCode")
+ * @JMS\ExclusionPolicy("all")
  */
 class Police
 {
@@ -18,6 +20,7 @@ class Police
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
+     * @JMS\Expose()
      */
     private $id;
 
@@ -26,6 +29,7 @@ class Police
      * @ORM\Column(type="string", length=30, unique=true)
      * @Assert\NotBlank()
      * @Assert\NotNull()
+     * @JMS\Expose()
      */
     private $personalCode;
 
@@ -33,16 +37,20 @@ class Police
      * @ORM\Column(type="string", length=255)
      * @Assert\NotBlank()
      * @Assert\NotNull()
+     * @JMS\Expose()
      */
     private $fullName;
 
     /**
      * @ORM\Column(type="boolean", options={"default": 1})
+     * @JMS\Expose()
      */
     private $isAvailable=true;
 
     /**
      * @ORM\OneToMany(targetEntity="App\Entity\Bike", mappedBy="responsible")
+     * @JMS\Expose()
+     * @JMS\Groups({"details"})
      */
     private $bikes;
 

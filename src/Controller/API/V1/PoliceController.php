@@ -58,6 +58,14 @@ class PoliceController extends BaseController
 
     }
 
+    /**
+     * @Route("/{id}", name="api_v1_polices_show", methods={"GET"})
+     */
+    public function show(Police $police): Response
+    {
+        return $this->createApiResponse($police, $statusCode = 200, $groups = ['Default', 'details']);
+
+    }
 
     /**
      * @param Police $police

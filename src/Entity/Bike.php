@@ -5,10 +5,12 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
+use JMS\Serializer\Annotation as JMS;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\BikeRepository")
  * @UniqueEntity("licenseNumber")
+ * @JMS\ExclusionPolicy("all")
  */
 class Bike
 {
@@ -16,11 +18,13 @@ class Bike
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
+     * @JMS\Expose()
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255, unique=true)
+     * @JMS\Expose()
      */
     private $licenseNumber;
 
@@ -28,6 +32,7 @@ class Bike
      * @ORM\Column(type="string", length=255)
      * @Assert\NotBlank()
      * @Assert\NotNull()
+     * @JMS\Expose()
      */
     private $color;
 
@@ -35,6 +40,7 @@ class Bike
      * @ORM\Column(type="string", length=255)
      * @Assert\NotBlank()
      * @Assert\NotNull()
+     * @JMS\Expose()
      */
     private $type;
 
@@ -42,6 +48,7 @@ class Bike
      * @ORM\Column(type="string", length=255)
      * @Assert\NotBlank()
      * @Assert\NotNull()
+     * @JMS\Expose()
      */
     private $ownerFullName;
 
@@ -49,6 +56,7 @@ class Bike
      * @ORM\Column(type="datetime")
      * @Assert\NotBlank()
      * @Assert\NotNull()
+     * @JMS\Expose()
      */
     private $stealingDate;
 
@@ -56,16 +64,19 @@ class Bike
      * @ORM\Column(type="text")
      * @Assert\NotBlank()
      * @Assert\NotNull()
+     * @JMS\Expose()
      */
     private $stealingDescription;
 
     /**
      * @ORM\Column(type="boolean", options={"default":0})
+     * @JMS\Expose()
      */
     private $isResolved=false;
 
     /**
      * @ORM\ManyToOne(targetEntity="App\Entity\Police", inversedBy="bikes")
+     * @JMS\Expose()
      */
     private $responsible;
 
