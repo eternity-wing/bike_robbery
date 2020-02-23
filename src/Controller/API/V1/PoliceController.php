@@ -41,7 +41,7 @@ class PoliceController extends BaseController
         $form = $this->createForm(PoliceType::class, $police);
 
         $this->processForm($request, $form);
-        $invalidDataResponse = $this->createInvalidDataResponseIfNeeded($form);
+        $invalidDataResponse = $this->createInvalidSubmittedDataResponseIfNeeded($form);
         if ($invalidDataResponse) {
             return $invalidDataResponse;
         }

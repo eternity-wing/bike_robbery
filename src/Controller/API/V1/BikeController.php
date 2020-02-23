@@ -7,11 +7,13 @@ namespace App\Controller\API\V1;
 use App\Entity\Bike;
 use App\Entity\Police;
 use App\Exception\TransactionException;
-use App\Form\BikeType;
+use App\Form\Filters\BikeFilterType;
 use App\Repository\BikeRepository;
 use App\Services\Pagination\Paginator;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 /**
  * Class BikeController
@@ -25,10 +27,11 @@ class BikeController extends BaseController
     /**
      * @Route("/", name="api_v1_bikes_index", methods={"GET"})
      */
-    public function index(Request $request, BikeRepository $bikeRepository, Paginator $paginator)
+    public function index(Request $request, BikeRepository $bikeRepository, Paginator $paginator): Response
     {
-        $queryParameters = $request->query->all();
-        $filters = [];
+        $filterForm = $this->createForm(BikeFilterType::class);
+        $this->processFilterForm($request, $filterForm);
+        $filters = $filterForm->isSubmitted() && $filterForm->isValid() ? $filterForm->getData() : [];
         $query = $bikeRepository->getFilterableQuery($filters);
 
         $offset = $request->query->getInt('offset', 1);
@@ -39,13 +42,13 @@ class BikeController extends BaseController
     /**
      * @Route("/", name="api_v1_bikes_new", methods={"POST"})
      */
-    public function new(Request $request)
+    public function new(Request $request): Response
     {
         $bike = new Bike();
-        $form = $this->createForm(BikeType::class, $bike);
+        $form = $this->createForm(BikeFilterType::class, $bike);
         $this->processForm($request, $form);
 
-        $invalidDataResponse = $this->createInvalidDataResponseIfNeeded($form);
+        $invalidDataResponse = $this->createInvalidSubmittedDataResponseIfNeeded($form);
         if ($invalidDataResponse) {
             return $invalidDataResponse;
         }
@@ -65,7 +68,7 @@ class BikeController extends BaseController
     /**
      * @Route("/{id}/respolve", name="api_v1_bikes_resolve", methods={"POST"})
      */
-    public function resolve(Bike $bike)
+    public function resolve(Bike $bike, SerializerInterface $serializer): Response
     {
         $isNotResolvedYet = $bike->getIsResolved() !== true;
         if ($isNotResolvedYet) {

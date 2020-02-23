@@ -59,10 +59,16 @@ class BikeRepository extends ServiceEntityRepository
             $parameters['license'] = $filters['license_number'];
         }
 
-        if(isset($filters['responsible'])){
+        if(isset($filters['responsibleCode'])){
             $qb->innerJoin('b.responsible', 'r');
             $qb->andWhere('r.personalCode = :pCode');
-            $parameters['pCode'] = $filters['responsible'];
+            $parameters['pCode'] = $filters['responsibleCode'];
+        }
+
+        if(isset($filters['stealingDate'])){
+            $qb->andWhere('r.stealingDate >= :dateFrom AND r.stealingDate < :dateTo');
+            $parameters['dateFrom'] = $filters['stealingDate']->setTime(0, 0, 1);
+            $parameters['dateTo'] = (clone $filters['stealingDate'])->setTime(23, 59, 59);
         }
 
 

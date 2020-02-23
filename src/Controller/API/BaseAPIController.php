@@ -8,6 +8,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Serializer\SerializerInterface;
 
 /**
  * Class BaseAPIController
@@ -16,45 +17,42 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class BaseAPIController extends AbstractController
 {
+    /**
+     * @const int page size
+     */
     const DEFAULT_PAGE_SIZE = 25;
 
+    /**
+     * @var SerializerInterface
+     */
+    private $serializer;
 
     /**
-     * @param array $data
+     * BaseAPIController constructor.
+     * @param SerializerInterface $serializer
+     */
+    public function __construct(SerializerInterface $serializer)
+    {
+        $this->serializer = $serializer;
+    }
+
+    /**
+     * @return SerializerInterface
+     */
+    public function getSerializer(): SerializerInterface
+    {
+        return $this->serializer;
+    }
+
+    /**
+     * @param mixed $data Any data
      * @param int $statusCode
-     * @param array $groups
      * @return Response
      */
-    public function createApiResponse(array $data, int $statusCode = 200, array $groups = ['Default']): Response
+    public function createApiResponse($data, int $statusCode = 200, array $groups = ['Default']): Response
     {
-        $json = $this->serialize($data, $groups);
+        $json = $this->getSerializer()->serialize($data, 'json', $groups);
         return new Response($json, $statusCode, ['Content-Type' => 'application/json']);
-    }
-
-
-    /**
-     * @param array $data
-     * @param array $groups
-     * @return false|string
-     */
-    public function serialize(array $data, array $groups = ['Default']): ?string
-    {
-        return json_encode($data);
-//        $context = new SerializationContext();
-//        $context->setSerializeNull(true);
-//        $context->setGroups($groups);
-//        return $this->get('jms_serializer')->serialize($data, 'json', $context);
-    }
-
-
-    /**
-     * @param $data
-     * @param int $statusCode
-     * @return Response
-     */
-    public function createSimpleApiResponse($data, $statusCode = 200): Response
-    {
-        return new Response($data, $statusCode, ['Content-Type' => 'application/json']);
     }
 
 
@@ -63,7 +61,7 @@ class BaseAPIController extends AbstractController
      * @param FormInterface $form
      * @return void
      */
-    public function processForm(Request $request, FormInterface $form):void
+    public function processForm(Request $request, FormInterface $form): void
     {
         $data = json_decode($request->getContent(), true);
 //        if ($data === null) {
@@ -74,6 +72,24 @@ class BaseAPIController extends AbstractController
 
         $clearMissing = $request->getMethod() != 'PATCH';
         $form->submit($data, $clearMissing);
+    }
+
+    /**
+     * @param Request $request
+     * @param FormInterface $filterForm
+     * @return void
+     */
+    public function processFilterForm(Request $request, FormInterface $filterForm): void
+    {
+        $formFields = array_keys($filterForm->all());
+        $queryParameters = $request->query->all();
+
+        $rawFilters = array_filter($queryParameters, static function ($value, $key) use ($formFields){
+            return in_array($key, $formFields, true);
+        },ARRAY_FILTER_USE_BOTH);
+
+        $clearMissing = $request->getMethod() != 'PATCH';
+        $filterForm->submit($rawFilters, $clearMissing);
     }
 
 
@@ -102,7 +118,7 @@ class BaseAPIController extends AbstractController
      * @param callable $callback
      * @throws TransactionException
      */
-    public function executeCallableInTransaction(callable $callback):void
+    public function executeCallableInTransaction(callable $callback): void
     {
         $em = $this->getDoctrine()->getManager();
         try {
@@ -119,12 +135,12 @@ class BaseAPIController extends AbstractController
      * @param FormInterface $form
      * @return Response|null
      */
-    public function createInvalidDataResponseIfNeeded(FormInterface $form): ?Response{
+    public function createInvalidSubmittedDataResponseIfNeeded(FormInterface $form): ?Response
+    {
         if ($form->isSubmitted() && $form->isValid()) {
             return null;
         }
         $errors = $this->getErrorsFromForm($form);
         return $this->createApiResponse($errors, 400);
     }
-
 }
