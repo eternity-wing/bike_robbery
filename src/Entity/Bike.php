@@ -14,6 +14,9 @@ use JMS\Serializer\Annotation as JMS;
  */
 class Bike
 {
+    const AVAILABLE_COLORS = ['red', 'green', 'blue', 'black', 'white', 'multi-color'];
+    const AVAILABLE_TYPES = ['sport', 'road', 'speed', 'mountain', 'hybrid', 'folding'];
+
     /**
      * @ORM\Id()
      * @ORM\GeneratedValue()

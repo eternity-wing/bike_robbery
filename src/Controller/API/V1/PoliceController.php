@@ -23,7 +23,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class PoliceController extends BaseController
 {
     /**
-     * @Route("/", name="api_v1_polices_index", methods={"GET"})
+     * @Route("", name="api_v1_polices_index", methods={"GET"})
      */
     public function index(Request $request, PoliceRepository $policeRepository, Paginator $paginator): Response
     {
@@ -33,7 +33,7 @@ class PoliceController extends BaseController
     }
 
     /**
-     * @Route("/", name="api_v1_polices_new", methods={"POST"})
+     * @Route("", name="api_v1_polices_new", methods={"POST"})
      */
     public function new(Request $request): Response
     {
@@ -54,18 +54,58 @@ class PoliceController extends BaseController
         } catch (TransactionException $transactionException) {
         }
         $em->refresh($police);
-        return $this->createApiResponse($police);
+        return $this->createApiResponse($police, 201);
 
     }
 
     /**
      * @Route("/{id}", name="api_v1_polices_show", methods={"GET"})
+     *
      */
     public function show(Police $police): Response
     {
-        return $this->createApiResponse($police, $statusCode = 200, $groups = ['Default', 'details']);
+        return $this->createApiResponse($police, 200, ['Default', 'details']);
 
     }
+
+    /**
+     * @Route("/{id}", name="api_v1_polices_edit", methods={"PUT", "PATCH"})
+     */
+    public function edit(Police $police, Request $request): Response
+    {
+        $form = $this->createForm(PoliceType::class, $police);
+
+        $this->processForm($request, $form);
+        $invalidDataResponse = $this->createInvalidSubmittedDataResponseIfNeeded($form);
+        if ($invalidDataResponse) {
+            return $invalidDataResponse;
+        }
+
+        $em = $this->getDoctrine()->getManager();
+        $em->flush();
+        try {
+            $this->assignTheftBikeResponsibilityIfExists($police);
+        } catch (TransactionException $transactionException) {
+        }
+        $em->refresh($police);
+        return $this->createApiResponse($police);
+
+    }
+
+
+
+
+    /**
+     * @Route("/{id}", name="api_v1_polices_delete", methods={"DELETE"})
+     */
+    public function delete(Police $police): Response
+    {
+        $em = $this->getDoctrine()->getManager();
+        $em->remove($police);
+        $em->flush();
+        return $this->createApiResponse([]);
+    }
+
 
     /**
      * @param Police $police

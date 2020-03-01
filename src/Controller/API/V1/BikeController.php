@@ -60,7 +60,7 @@ class BikeController extends BaseController
         } catch (TransactionException $transactionException) {
         }
         $em->refresh($bike);
-        return $this->createApiResponse($bike);
+        return $this->createApiResponse($bike, 201);
 
     }
 
@@ -85,6 +85,29 @@ class BikeController extends BaseController
         }
         return $this->createApiResponse($bike);
     }
+
+    /**
+     * @Route("/{id}", name="api_v1_bikes_delete", methods={"DELETE"})
+     */
+    public function delete(Bike $bike): Response
+    {
+        $em = $this->getDoctrine()->getManager();
+        $responsibleOfficer = $bike->getResponsible();
+        $em->remove($bike);
+        $em->flush();
+
+        $em->persist($responsibleOfficer);
+        try {
+            $this->executeCallableInTransaction(static function () use ($responsibleOfficer) {
+                $responsibleOfficer->setIsAvailable(true);
+            });
+        } catch (TransactionException $transactionException) {
+        }
+        return $this->createApiResponse([]);
+    }
+
+
+
 
     /**
      * @Route("/{id}", name="api_v1_bikes_show", methods={"GET"})
