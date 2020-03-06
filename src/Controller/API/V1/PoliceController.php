@@ -3,9 +3,8 @@
 
 namespace App\Controller\API\V1;
 
-use App\Entity\Bike;
 use App\Entity\Police;
-use App\Exception\TransactionException;
+use App\Factory\PoliceFactory;
 use App\Form\PoliceType;
 use App\Repository\PoliceRepository;
 use App\Services\Pagination\Paginator;
@@ -27,33 +26,24 @@ class PoliceController extends BaseController
      */
     public function index(Request $request, PoliceRepository $policeRepository, Paginator $paginator): Response
     {
-        $offset = $request->query->getInt('offset', 1);
-        $limit = $request->query->getInt('limit', self::DEFAULT_PAGE_SIZE);
+        [$offset, $limit] = $this->extractDefaultFilters($request);
         return $this->createApiResponse($paginator->paginate($policeRepository->findAllQuery(), $offset, $limit));
     }
 
     /**
      * @Route("", name="api_v1_polices_new", methods={"POST"})
      */
-    public function new(Request $request): Response
+    public function new(Request $request, PoliceFactory $policeFactory): Response
     {
         $police = new Police();
         $form = $this->createForm(PoliceType::class, $police);
 
-        $this->processForm($request, $form);
-        $invalidDataResponse = $this->createInvalidSubmittedDataResponseIfNeeded($form);
-        if ($invalidDataResponse) {
-            return $invalidDataResponse;
+        $response = $this->validateRequest($form, $request);
+        if($response !== null){
+            return $response;
         }
-
-        $em = $this->getDoctrine()->getManager();
-        $em->persist($police);
-        $em->flush();
-        try {
-            $this->assignTheftBikeResponsibilityIfExists($police);
-        } catch (TransactionException $transactionException) {
-        }
-        $em->refresh($police);
+        $policeFactory->store($police);
+        $policeFactory->assignResponsibility($police, null);
         return $this->createApiResponse($police, 201);
 
     }
@@ -71,57 +61,27 @@ class PoliceController extends BaseController
     /**
      * @Route("/{id}", name="api_v1_polices_edit", methods={"PUT", "PATCH"})
      */
-    public function edit(Police $police, Request $request): Response
+    public function edit(Police $police, Request $request, PoliceFactory $policeFactory): Response
     {
         $form = $this->createForm(PoliceType::class, $police);
-
-        $this->processForm($request, $form);
-        $invalidDataResponse = $this->createInvalidSubmittedDataResponseIfNeeded($form);
-        if ($invalidDataResponse) {
-            return $invalidDataResponse;
+        $response = $this->validateRequest($form, $request);
+        if($response !== null){
+            return $response;
         }
-
-        $em = $this->getDoctrine()->getManager();
-        $em->flush();
-        try {
-            $this->assignTheftBikeResponsibilityIfExists($police);
-        } catch (TransactionException $transactionException) {
-        }
-        $em->refresh($police);
+        $policeFactory->store($police);
+        $policeFactory->assignResponsibility($police, null);
         return $this->createApiResponse($police);
 
     }
 
 
-
-
     /**
      * @Route("/{id}", name="api_v1_polices_delete", methods={"DELETE"})
      */
-    public function delete(Police $police): Response
+    public function delete(Police $police, PoliceFactory $policeFactory): Response
     {
-        $em = $this->getDoctrine()->getManager();
-        $em->remove($police);
-        $em->flush();
+        $policeFactory->delete($police);
         return $this->createApiResponse([]);
-    }
-
-
-    /**
-     * @param Police $police
-     * @return void
-     * @throws \App\Exception\TransactionException
-     */
-    private function assignTheftBikeResponsibilityIfExists(Police $police): void
-    {
-        $em = $this->getDoctrine()->getManager();
-        $bikeNeedsResponsible = $em->getRepository(Bike::class)->findOneBikeNeedsResponsible();
-        if ($bikeNeedsResponsible) {
-            $this->executeCallableInTransaction(static function () use ($police, $bikeNeedsResponsible) {
-                $police->setIsAvailable(false);
-                $bikeNeedsResponsible->setResponsible($police);
-            });
-        }
     }
 
 }

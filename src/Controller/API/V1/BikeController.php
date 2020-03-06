@@ -7,6 +7,7 @@ namespace App\Controller\API\V1;
 use App\Entity\Bike;
 use App\Entity\Police;
 use App\Exception\TransactionException;
+use App\Factory\BikeFactory;
 use App\Form\Filters\BikeFilterType;
 use App\Repository\BikeRepository;
 use App\Services\Pagination\Paginator;
@@ -28,85 +29,65 @@ class BikeController extends BaseController
      */
     public function index(Request $request, BikeRepository $bikeRepository, Paginator $paginator): Response
     {
-        $filterForm = $this->createForm(BikeFilterType::class);
-        $this->processFilterForm($request, $filterForm);
-        $filters = $filterForm->isSubmitted() && $filterForm->isValid() ? $filterForm->getData() : [];
-        $query = $bikeRepository->getFilterableQuery($filters);
-
-        $offset = $request->query->getInt('offset', 1);
-        $limit = $request->query->getInt('limit', self::DEFAULT_PAGE_SIZE);
+        $filterForm = $this->createForm(BikeFilterType::class, null, ['allow_extra_fields' => true]);
+        $response = $this->validateRequest($filterForm, $request);
+        if($response !== null){
+            return $response;
+        }
+        $query = $bikeRepository->getFilterableQuery($filterForm->getData());
+        [$offset, $limit] = $this->extractDefaultFilters($request);
         return $this->createApiResponse($paginator->paginate($query, $offset, $limit));
     }
 
     /**
      * @Route("/", name="api_v1_bikes_new", methods={"POST"})
      */
-    public function new(Request $request): Response
+    public function new(Request $request, BikeFactory $bikeFactory): Response
     {
         $bike = new Bike();
         $form = $this->createForm(BikeFilterType::class, $bike);
-        $this->processForm($request, $form);
-
-        $invalidDataResponse = $this->createInvalidSubmittedDataResponseIfNeeded($form);
-        if ($invalidDataResponse) {
-            return $invalidDataResponse;
+        $response = $this->validateRequest($form, $request);
+        if($response !== null){
+            return $response;
         }
-
-        $em = $this->getDoctrine()->getManager();
-        $em->persist($bike);
-        $em->flush();
-        try {
-            $this->assignBikeToAvailableOfficerIfExists($bike);
-        } catch (TransactionException $transactionException) {
-        }
-        $em->refresh($bike);
+        $bikeFactory->store($bike);
+        $bikeFactory->assignResponsible($bike, null);
         return $this->createApiResponse($bike, 201);
-
     }
+
+    /**
+     * @Route("/", name="api_v1_bikes_edit", methods={"PUT", "PATCH"})
+     */
+    public function edit(Bike $bike, Request $request, BikeFactory $bikeFactory): Response
+    {
+        $form = $this->createForm(BikeFilterType::class, $bike);
+        $response = $this->validateRequest($form, $request);
+        if($response !== null){
+            return $response;
+        }
+        $bikeFactory->store($bike);
+        $bikeFactory->assignResponsible($bike, null);
+        return $this->createApiResponse($bike, 201);
+    }
+
 
     /**
      * @Route("/{id}/respolve", name="api_v1_bikes_resolve", methods={"POST"})
      */
-    public function resolve(Bike $bike): Response
+    public function resolve(Bike $bike, BikeFactory $bikeFactory): Response
     {
-        $isNotResolvedYet = $bike->getIsResolved() !== true;
-        if ($isNotResolvedYet) {
-            $responsibleOfficer = $bike->getResponsible();
-            $em = $this->getDoctrine()->getManager();
-            $em->persist($responsibleOfficer);
-            try {
-                $this->executeCallableInTransaction(static function () use ($bike, $responsibleOfficer) {
-                    $bike->setIsResolved(true);
-                    $responsibleOfficer->setIsAvailable(true);
-                });
-            } catch (TransactionException $transactionException) {
-            }
-            $em->refresh($bike);
-        }
+        $bikeFactory->resolve($bike);
         return $this->createApiResponse($bike);
     }
 
     /**
      * @Route("/{id}", name="api_v1_bikes_delete", methods={"DELETE"})
      */
-    public function delete(Bike $bike): Response
+    public function delete(Bike $bike, BikeFactory $bikeFactory): Response
     {
-        $em = $this->getDoctrine()->getManager();
-        $responsibleOfficer = $bike->getResponsible();
-        $em->remove($bike);
-        $em->flush();
-
-        $em->persist($responsibleOfficer);
-        try {
-            $this->executeCallableInTransaction(static function () use ($responsibleOfficer) {
-                $responsibleOfficer->setIsAvailable(true);
-            });
-        } catch (TransactionException $transactionException) {
-        }
+        $bikeFactory->delete($bike);
         return $this->createApiResponse([]);
     }
-
-
 
 
     /**
@@ -115,23 +96,6 @@ class BikeController extends BaseController
     public function show(Bike $bike): Response
     {
         return $this->createApiResponse($bike);
-    }
-
-    /**
-     * @param Bike $bike
-     * @return void
-     * @throws \App\Exception\TransactionException
-     */
-    private function assignBikeToAvailableOfficerIfExists(Bike $bike): void
-    {
-        $em = $this->getDoctrine()->getManager();
-        $availableOfficer = $em->getRepository(Police::class)->findOneBy(['isAvailable' => true]);
-        if ($availableOfficer) {
-            $this->executeCallableInTransaction(static function () use ($bike, $availableOfficer) {
-                $availableOfficer->setIsAvailable(false);
-                $bike->setResponsible($availableOfficer);
-            });
-        }
     }
 
 }

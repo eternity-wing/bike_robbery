@@ -3,7 +3,10 @@
 
 namespace App\Controller\API;
 
-use App\Exception\TransactionException;
+use App\Exception\InvalidFormDataException;
+use App\Exception\InvalidJsonFormatException;
+use App\Services\FormDataSubmitter;
+use App\Services\Utils;
 use JMS\Serializer\SerializationContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
@@ -29,12 +32,20 @@ class BaseAPIController extends AbstractController
      */
     private $serializer;
 
+
+    /**
+     * @var FormDataSubmitter
+     */
+    private $formDataSubmitter;
+
     /**
      * BaseAPIController constructor.
+     * @param FormDataSubmitter $formDataSubmitter
      */
-    public function __construct()
+    public function __construct(FormDataSubmitter $formDataSubmitter)
     {
         $this->serializer = SerializerBuilder::create()->build();
+        $this->formDataSubmitter = $formDataSubmitter;
     }
 
     /**
@@ -71,42 +82,6 @@ class BaseAPIController extends AbstractController
         return $this->getSerializer()->serialize($data, 'json', $context);
     }
 
-    /**
-     * @param Request $request
-     * @param FormInterface $form
-     * @return void
-     */
-    public function processForm(Request $request, FormInterface $form): void
-    {
-        $data = json_decode($request->getContent(), true);
-//        if ($data === null) {
-//            $apiProblem = new ApiProblem(400, ApiProblem::TYPE_INVALID_REQUEST_BODY_FORMAT);
-//
-//            throw new ApiProblemException($apiProblem);
-//        }
-
-        $clearMissing = $request->getMethod() != 'PATCH';
-        $form->submit($data, $clearMissing);
-    }
-
-    /**
-     * @param Request $request
-     * @param FormInterface $filterForm
-     * @return void
-     */
-    public function processFilterForm(Request $request, FormInterface $filterForm): void
-    {
-        $formFields = array_keys($filterForm->all());
-        $queryParameters = $request->query->all();
-
-        $rawFilters = array_filter($queryParameters, static function ($value, $key) use ($formFields) {
-            return in_array($key, $formFields, true);
-        }, ARRAY_FILTER_USE_BOTH);
-
-        $clearMissing = $request->getMethod() != 'PATCH';
-        $filterForm->submit($rawFilters, $clearMissing);
-    }
-
 
     /**
      * @param FormInterface $form
@@ -128,34 +103,33 @@ class BaseAPIController extends AbstractController
         return $errors;
     }
 
-
     /**
-     * @param callable $callback
-     * @throws TransactionException
+     * @param Request $request
+     * @return array
      */
-    public function executeCallableInTransaction(callable $callback): void
+    public function extractDefaultFilters(Request $request): array
     {
-        $em = $this->getDoctrine()->getManager();
-        try {
-            $callback();
-            $em->getConnection()->commit();
-        } catch (\Exception $e) {
-            $em->getConnection()->rollBack();
-            throw new TransactionException($e->getMessage());
-        }
+        $offset = $request->query->getInt('offset', 1);
+        $limit = $request->query->getInt('limit', self::DEFAULT_PAGE_SIZE);
+        return [$offset, $limit];
     }
-
 
     /**
      * @param FormInterface $form
+     * @param Request $request
      * @return Response|null
      */
-    public function createInvalidSubmittedDataResponseIfNeeded(FormInterface $form): ?Response
+    public function validateRequest(FormInterface $form, Request $request): ?Response
     {
-        if ($form->isSubmitted() && $form->isValid()) {
+        try {
+            $data = Utils::parseJson($request->getContent());
+            $clearMissing = $request->getMethod() !== 'PATCH';
+            $this->formDataSubmitter->submit($form, $clearMissing, $data);
             return null;
+        } catch (InvalidJsonFormatException $exception) {
+            return $this->createApiResponse(['error' => 'Invalid json format'], 400);
+        } catch (InvalidFormDataException $exception) {
+            return $this->createApiResponse(['error' => $this->getErrorsFromForm($form)], 400);
         }
-        $errors = $this->getErrorsFromForm($form);
-        return $this->createApiResponse($errors, 400);
     }
 }

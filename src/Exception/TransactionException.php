@@ -6,6 +6,12 @@ namespace App\Exception;
 
 use Throwable;
 
+/**
+ * Class TransactionException
+ * @package App\Exception
+ *
+ * @author Wings <Eternity.mr8@gmail.com>
+ */
 class TransactionException extends \Exception
 {
     public function __construct($message = "An exception occures during running transaction", $code = 0, Throwable $previous = null)
