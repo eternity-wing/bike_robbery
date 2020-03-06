@@ -86,12 +86,11 @@ class AppFixtures extends Fixture
             $manager->persist($bike);
 
             $availableResponsible = (random_int(1, 3) % 3) !== 0 ? null : $manager->getRepository(Police::class)->findOneBy(['isAvailable' => true]);
-            if($availableResponsible){
+            if ($availableResponsible) {
                 $bike->setResponsible($availableResponsible);
                 $availableResponsible->setIsAvailable(false);
                 $manager->flush();
             }
         }
     }
-
 }

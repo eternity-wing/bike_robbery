@@ -35,42 +35,43 @@ class BikeRepository extends ServiceEntityRepository
      * @param array $filters
      * @return Query
      */
-    public function getFilterableQuery(array $filters=[]): Query{
+    public function getFilterableQuery(array $filters=[]): Query
+    {
         $parameters = [];
         $qb = $this->createQueryBuilder('b');
 
-        if(isset($filters['license_number'])){
+        if (isset($filters['license_number'])) {
             $qb->andWhere('b.licenseNumber = :license');
             $parameters['license'] = $filters['license_number'];
         }
 
-        if(isset($filters['color'])){
+        if (isset($filters['color'])) {
             $qb->andWhere('b.color = :clr');
             $parameters['clr'] = $filters['color'];
         }
 
-        if(isset($filters['type'])){
+        if (isset($filters['type'])) {
             $qb->andWhere('b.type = :typ');
             $parameters['typ'] = $filters['type'];
         }
 
-        if(isset($filters['owner_full_name'])){
+        if (isset($filters['owner_full_name'])) {
             $qb->andWhere('b.ownerFullName = :ownerName');
             $parameters['ownerName'] = $filters['owner_full_name'];
         }
 
-        if(isset($filters['license_number'])){
+        if (isset($filters['license_number'])) {
             $qb->andWhere('b.licenseNumber = :license');
             $parameters['license'] = $filters['license_number'];
         }
 
-        if(isset($filters['responsibleCode'])){
+        if (isset($filters['responsibleCode'])) {
             $qb->innerJoin('b.responsible', 'r');
             $qb->andWhere('r.personalCode = :pCode');
             $parameters['pCode'] = $filters['responsibleCode'];
         }
 
-        if(isset($filters['stealingDate'])){
+        if (isset($filters['stealingDate'])) {
             $qb->andWhere('r.stealingDate >= :dateFrom AND r.stealingDate < :dateTo');
             $parameters['dateFrom'] = $filters['stealingDate']->setTime(0, 0, 1);
             $parameters['dateTo'] = (clone $filters['stealingDate'])->setTime(23, 59, 59);
@@ -80,7 +81,6 @@ class BikeRepository extends ServiceEntityRepository
 
 
         return  $qb->setParameters($parameters)->getQuery();
-
     }
 
     // /**

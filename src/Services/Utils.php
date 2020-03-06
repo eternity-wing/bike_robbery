@@ -18,7 +18,7 @@ class Utils
      * @return array
      * @throws InvalidJsonFormatException
      */
-    static function parseJson(string $json): array
+    public static function parseJson(string $json): array
     {
         $data = json_decode($json, true);
         if ($data === null) {

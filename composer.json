@@ -58,6 +58,10 @@
     ],
     "post-update-cmd": [
       "@auto-scripts"
+    ],
+    "lint:php": [
+      "php-cs-fixer fix ./src",
+      "php-cs-fixer fix ./tests"
     ]
   },
   "conflict": {

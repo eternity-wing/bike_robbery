@@ -3,7 +3,6 @@
 
 namespace App\Services\Doctrine;
 
-
 use App\Exception\TransactionException;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -31,5 +30,4 @@ class Utils
             throw new TransactionException($e->getMessage());
         }
     }
-
 }

@@ -3,7 +3,6 @@
 
 namespace App\Services;
 
-
 use App\Exception\InvalidFormDataException;
 use Symfony\Component\Form\FormInterface;
 
@@ -29,5 +28,4 @@ class FormDataSubmitter
             throw new InvalidFormDataException();
         }
     }
-
 }

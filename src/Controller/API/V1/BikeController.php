@@ -3,7 +3,6 @@
 
 namespace App\Controller\API\V1;
 
-
 use App\Entity\Bike;
 use App\Entity\Police;
 use App\Exception\TransactionException;
@@ -31,7 +30,7 @@ class BikeController extends BaseController
     {
         $filterForm = $this->createForm(BikeFilterType::class, null, ['allow_extra_fields' => true]);
         $response = $this->validateData($filterForm, false, $request->query->all());
-        if($response !== null){
+        if ($response !== null) {
             return $response;
         }
         $query = $bikeRepository->getFilterableQuery($filterForm->getData());
@@ -47,7 +46,7 @@ class BikeController extends BaseController
         $bike = new Bike();
         $form = $this->createForm(BikeFilterType::class, $bike);
         $response = $this->validateJsonRequest($form, $request);
-        if($response !== null){
+        if ($response !== null) {
             return $response;
         }
         $bikeFactory->store($bike);
@@ -62,7 +61,7 @@ class BikeController extends BaseController
     {
         $form = $this->createForm(BikeFilterType::class, $bike);
         $response = $this->validateJsonRequest($form, $request);
-        if($response !== null){
+        if ($response !== null) {
             return $response;
         }
         $bikeFactory->store($bike);
@@ -97,5 +96,4 @@ class BikeController extends BaseController
     {
         return $this->createApiResponse($bike);
     }
-
 }

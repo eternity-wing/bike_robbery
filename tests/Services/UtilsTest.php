@@ -3,7 +3,6 @@
 
 namespace App\Tests\Services;
 
-
 use App\Exception\InvalidJsonFormatException;
 use App\Services\Utils;
 use PHPUnit\Framework\TestCase;

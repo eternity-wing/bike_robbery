@@ -12,5 +12,4 @@ use App\Controller\API\BaseAPIController;
  */
 class BaseController extends BaseAPIController
 {
-
 }

@@ -3,14 +3,13 @@
 
 namespace App\Factory;
 
-
 use App\Entity\Bike;
 use App\Entity\Police;
 use App\Exception\TransactionException;
 use Doctrine\DBAL\ConnectionException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use App\Services\Doctrine\Utils AS DoctrineUtils;
+use App\Services\Doctrine\Utils as DoctrineUtils;
 
 /**
  * Class PoliceFactory
@@ -91,6 +90,4 @@ class PoliceFactory extends BaseFactory
             $exceptionCallback($e);
         }
     }
-
-
 }

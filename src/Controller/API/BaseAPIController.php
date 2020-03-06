@@ -122,9 +122,11 @@ class BaseAPIController extends AbstractController
     public function validateJsonRequest(FormInterface $form, Request $request): ?Response
     {
         try {
-            return $this->validateData($form,
+            return $this->validateData(
+                $form,
                 $request->getMethod() !== 'PATCH',
-                Utils::parseJson($request->getContent()));
+                Utils::parseJson($request->getContent())
+            );
         } catch (InvalidJsonFormatException $exception) {
             return $this->createApiResponse(['error' => 'Invalid json format'], 400);
         }

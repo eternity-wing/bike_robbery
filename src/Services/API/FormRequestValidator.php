@@ -3,7 +3,6 @@
 
 namespace App\Services\API;
 
-
 use App\Exception\InvalidFormDataException;
 use App\Exception\InvalidJsonFormatException;
 use App\Services\FormDataSubmitter;
@@ -46,9 +45,9 @@ class FormRequestValidator
             $clearMissing = $request->getMethod() !== 'PATCH';
             $this->formDataSubmitter->submit($form, $clearMissing, $data);
             return null;
-        }catch (InvalidJsonFormatException $exception){
+        } catch (InvalidJsonFormatException $exception) {
             return ['data' => ['error' => 'Invalid json format'], 'status' => 400];
-        }catch (InvalidFormDataException $exception){
+        } catch (InvalidFormDataException $exception) {
             return ['data' => ['error' => $this->getErrorsFromForm($form)], 'status' => 400];
         }
     }

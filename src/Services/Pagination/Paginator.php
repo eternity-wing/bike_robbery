@@ -3,7 +3,6 @@
 
 namespace App\Services\Pagination;
 
-
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Tools\Pagination\Paginator as DoctrinePaginator;
 
@@ -32,6 +31,5 @@ class Paginator implements PaginatorInterface
             ->setMaxResults($limit)->getResult();
 
         return ['totalItems' => $totalItems, 'pageCount' => $pagesCount, 'items' => $result];
-
     }
 }

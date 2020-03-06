@@ -24,7 +24,8 @@ class PoliceRepository extends ServiceEntityRepository
     /**
      * @return Query
      */
-    public function findAllQuery():Query{
+    public function findAllQuery():Query
+    {
         $qb = $this->createQueryBuilder('p');
         $qb->orderBy('p.id', 'DESC');
         return $qb->getQuery();

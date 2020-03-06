@@ -131,5 +131,4 @@ class Police
 
         return $this;
     }
-    
 }

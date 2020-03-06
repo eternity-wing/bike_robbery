@@ -39,13 +39,12 @@ class PoliceController extends BaseController
         $form = $this->createForm(PoliceType::class, $police);
 
         $response = $this->validateJsonRequest($form, $request);
-        if($response !== null){
+        if ($response !== null) {
             return $response;
         }
         $policeFactory->store($police);
         $policeFactory->assignResponsibility($police, null);
         return $this->createApiResponse($police, 201);
-
     }
 
     /**
@@ -55,7 +54,6 @@ class PoliceController extends BaseController
     public function show(Police $police): Response
     {
         return $this->createApiResponse($police, 200, ['Default', 'details']);
-
     }
 
     /**
@@ -65,13 +63,12 @@ class PoliceController extends BaseController
     {
         $form = $this->createForm(PoliceType::class, $police);
         $response = $this->validateJsonRequest($form, $request);
-        if($response !== null){
+        if ($response !== null) {
             return $response;
         }
         $policeFactory->store($police);
         $policeFactory->assignResponsibility($police, null);
         return $this->createApiResponse($police);
-
     }
 
 
@@ -83,5 +80,4 @@ class PoliceController extends BaseController
         $policeFactory->delete($police);
         return $this->createApiResponse([]);
     }
-
 }

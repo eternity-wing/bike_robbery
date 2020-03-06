@@ -3,7 +3,6 @@
 
 namespace App\Factory;
 
-
 use App\Entity\Bike;
 use App\Entity\Police;
 use App\Services\Doctrine\Utils as DoctrineUtils;
@@ -74,7 +73,6 @@ class BikeFactory extends BaseFactory
      */
     public function resolve(Bike $bike, ?callable $exceptionCallback): void
     {
-
         try {
             $this->doctrineUtils->executeCallableInTransaction(static function () use ($bike) {
                 $responsibleOfficer = $bike->getResponsible();
@@ -90,7 +88,6 @@ class BikeFactory extends BaseFactory
         } catch (TransactionException $e) {
             $exceptionCallback($e);
         }
-
     }
 
     /**
@@ -98,7 +95,8 @@ class BikeFactory extends BaseFactory
      * @param callable|null $exceptionCallback
      * @throws ConnectionException
      */
-    public function delete(Bike $bike, ?callable $exceptionCallback): void{
+    public function delete(Bike $bike, ?callable $exceptionCallback): void
+    {
         try {
             $this->doctrineUtils->executeCallableInTransaction(static function () use ($bike) {
                 $responsibleOfficer = $bike->getResponsible();
@@ -113,5 +111,4 @@ class BikeFactory extends BaseFactory
             $exceptionCallback($e);
         }
     }
-
 }
