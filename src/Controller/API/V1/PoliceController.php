@@ -38,7 +38,7 @@ class PoliceController extends BaseController
         $police = new Police();
         $form = $this->createForm(PoliceType::class, $police);
 
-        $response = $this->validateRequest($form, $request);
+        $response = $this->validateJsonRequest($form, $request);
         if($response !== null){
             return $response;
         }
@@ -64,7 +64,7 @@ class PoliceController extends BaseController
     public function edit(Police $police, Request $request, PoliceFactory $policeFactory): Response
     {
         $form = $this->createForm(PoliceType::class, $police);
-        $response = $this->validateRequest($form, $request);
+        $response = $this->validateJsonRequest($form, $request);
         if($response !== null){
             return $response;
         }

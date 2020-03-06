@@ -49,6 +49,11 @@ class BikeRepository extends ServiceEntityRepository
             $parameters['clr'] = $filters['color'];
         }
 
+        if(isset($filters['type'])){
+            $qb->andWhere('b.type = :typ');
+            $parameters['typ'] = $filters['type'];
+        }
+
         if(isset($filters['owner_full_name'])){
             $qb->andWhere('b.ownerFullName = :ownerName');
             $parameters['ownerName'] = $filters['owner_full_name'];

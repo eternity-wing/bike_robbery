@@ -30,7 +30,7 @@ class BikeController extends BaseController
     public function index(Request $request, BikeRepository $bikeRepository, Paginator $paginator): Response
     {
         $filterForm = $this->createForm(BikeFilterType::class, null, ['allow_extra_fields' => true]);
-        $response = $this->validateRequest($filterForm, $request);
+        $response = $this->validateData($filterForm, false, $request->query->all());
         if($response !== null){
             return $response;
         }
@@ -46,7 +46,7 @@ class BikeController extends BaseController
     {
         $bike = new Bike();
         $form = $this->createForm(BikeFilterType::class, $bike);
-        $response = $this->validateRequest($form, $request);
+        $response = $this->validateJsonRequest($form, $request);
         if($response !== null){
             return $response;
         }
@@ -61,7 +61,7 @@ class BikeController extends BaseController
     public function edit(Bike $bike, Request $request, BikeFactory $bikeFactory): Response
     {
         $form = $this->createForm(BikeFilterType::class, $bike);
-        $response = $this->validateRequest($form, $request);
+        $response = $this->validateJsonRequest($form, $request);
         if($response !== null){
             return $response;
         }

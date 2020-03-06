@@ -119,15 +119,28 @@ class BaseAPIController extends AbstractController
      * @param Request $request
      * @return Response|null
      */
-    public function validateRequest(FormInterface $form, Request $request): ?Response
+    public function validateJsonRequest(FormInterface $form, Request $request): ?Response
     {
         try {
-            $data = Utils::parseJson($request->getContent());
-            $clearMissing = $request->getMethod() !== 'PATCH';
-            $this->formDataSubmitter->submit($form, $clearMissing, $data);
-            return null;
+            return $this->validateData($form,
+                $request->getMethod() !== 'PATCH',
+                Utils::parseJson($request->getContent()));
         } catch (InvalidJsonFormatException $exception) {
             return $this->createApiResponse(['error' => 'Invalid json format'], 400);
+        }
+    }
+
+    /**
+     * @param FormInterface $form
+     * @param $clearMissing
+     * @param array $data
+     * @return Response|null
+     */
+    public function validateData(FormInterface $form, $clearMissing, array $data):?Response
+    {
+        try {
+            $this->formDataSubmitter->submit($form, $clearMissing, $data);
+            return null;
         } catch (InvalidFormDataException $exception) {
             return $this->createApiResponse(['error' => $this->getErrorsFromForm($form)], 400);
         }
