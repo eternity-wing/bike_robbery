@@ -26,4 +26,21 @@ class Utils
         }
         return $data;
     }
+
+
+    /**
+     * @param int $strength
+     * @return string
+     * @throws \Exception
+     */
+    public static function generateRandomString(int $strength = 16)
+    {
+        $randomString = '';
+        $zeroAsciiCode = ord(0);
+        $zAsciiCode = ord('z');
+        for ($i = 0; $i < $strength; $i++) {
+            $randomString .= chr(random_int($zeroAsciiCode, $zAsciiCode));
+        }
+        return $randomString;
+    }
 }

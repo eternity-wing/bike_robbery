@@ -53,17 +53,17 @@ class BikeFactory extends BaseFactory
     public function assignResponsible(Bike $bike, ?callable $exceptionCallback): void
     {
         try {
-            $availableOfficer = $this->entityManager->getRepository(Police::class)->findOneBy(['isAvailable' => true]);
-            if ($availableOfficer instanceof Police) {
-                $this->doctrineUtils->executeCallableInTransaction(static function () use ($bike, $availableOfficer) {
+            $this->doctrineUtils->executeCallableInTransaction(static function (EntityManagerInterface $entityManager) use ($bike) {
+                $availableOfficer = $this->entityManager->getRepository(Police::class)->findOneBy(['isAvailable' => true]);
+                if ($availableOfficer instanceof Police) {
                     $availableOfficer->setIsAvailable(false);
                     $bike->setResponsible($availableOfficer);
-                });
-                $this->entityManager->refresh($bike);
-            }
+                }
+            });
         } catch (TransactionException $e) {
             $exceptionCallback($e);
         }
+        $this->entityManager->refresh($bike);
     }
 
     /**
@@ -74,20 +74,20 @@ class BikeFactory extends BaseFactory
     public function resolve(Bike $bike, ?callable $exceptionCallback): void
     {
         try {
-            $this->doctrineUtils->executeCallableInTransaction(static function () use ($bike) {
+            $this->doctrineUtils->executeCallableInTransaction(static function (EntityManagerInterface $entityManager) use ($bike) {
                 $responsibleOfficer = $bike->getResponsible();
                 $isNotEngagedOfficer = $bike->getIsResolved() || $responsibleOfficer === null;
                 if ($isNotEngagedOfficer) {
                     return;
                 }
-                $this->entityManager->persist($responsibleOfficer);
+                $entityManager->persist($responsibleOfficer);
                 $bike->setIsResolved(true);
                 $responsibleOfficer->setIsAvailable(true);
-                $this->entityManager->refresh($bike);
             });
         } catch (TransactionException $e) {
             $exceptionCallback($e);
         }
+        $this->entityManager->refresh($bike);
     }
 
     /**
@@ -98,17 +98,17 @@ class BikeFactory extends BaseFactory
     public function delete(Bike $bike, ?callable $exceptionCallback): void
     {
         try {
-            $this->doctrineUtils->executeCallableInTransaction(static function () use ($bike) {
+            $this->doctrineUtils->executeCallableInTransaction(static function (EntityManagerInterface $entityManager) use ($bike) {
                 $responsibleOfficer = $bike->getResponsible();
                 $isNotEngagedOfficer = $bike->getIsResolved() || $responsibleOfficer === null;
                 if ($isNotEngagedOfficer) {
-                    $this->entityManager->persist($responsibleOfficer);
+                    $entityManager->persist($responsibleOfficer);
                     $responsibleOfficer->setIsAvailable(true);
                 }
-                $this->entityManager->remove($bike);
             });
         } catch (TransactionException $e) {
             $exceptionCallback($e);
         }
+        $this->entityManager->remove($bike);
     }
 }

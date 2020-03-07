@@ -54,17 +54,17 @@ class PoliceFactory extends BaseFactory
     public function assignResponsibility(Police $police, ?callable $exceptionCallback): void
     {
         try {
-            $bikeNeedsResponsible = $this->entityManager->getRepository(Bike::class)->findOneBikeNeedsResponsible();
-            if ($bikeNeedsResponsible instanceof Bike) {
-                $this->doctrineUtils->executeCallableInTransaction(static function () use ($police, $bikeNeedsResponsible) {
+            $this->doctrineUtils->executeCallableInTransaction(static function (EntityManagerInterface $entityManager) use ($police) {
+                $bikeNeedsResponsible = $entityManager->getRepository(Bike::class)->findOneBikeNeedsResponsible();
+                if ($bikeNeedsResponsible instanceof Bike) {
                     $police->setIsAvailable(false);
                     $bikeNeedsResponsible->setResponsible($police);
-                });
-                $this->entityManager->refresh($police);
-            }
+                }
+            });
         } catch (TransactionException $e) {
             $exceptionCallback($e);
         }
+        $this->entityManager->refresh($police);
     }
 
 
@@ -76,18 +76,17 @@ class PoliceFactory extends BaseFactory
     public function delete(Police $police, ?callable $exceptionCallback): void
     {
         try {
-            $this->doctrineUtils->executeCallableInTransaction(static function () use ($police) {
-                $noneResolveBike = $this->entityManager->getRepository(Bike::class)
+            $this->doctrineUtils->executeCallableInTransaction(static function (EntityManagerInterface $entityManager) use ($police) {
+                $noneResolveBike = $entityManager->getRepository(Bike::class)
                     ->findOneBy(['responsible' => $police, 'isResolved' => true]);
                 if ($noneResolveBike instanceof Bike) {
-                    $this->entityManager->persist($noneResolveBike);
+                    $entityManager->persist($noneResolveBike);
                     $noneResolveBike->setResponsible(null);
                 }
-
-                $this->entityManager->remove($police);
             });
         } catch (TransactionException $e) {
             $exceptionCallback($e);
         }
+        $this->entityManager->remove($police);
     }
 }
