@@ -41,10 +41,10 @@ class BikeFactory extends BaseFactory
 
     /**
      * @param array $data
-     * @return Police
+     * @return Bike
      * @throws InvalidObjectException
      */
-    public function create(array $data): Police
+    public function create(array $data): Bike
     {
         $bike = new Bike();
         $bike->setOwnerFullName($data['ownerFullName']);
@@ -78,8 +78,12 @@ class BikeFactory extends BaseFactory
     public function assignResponsible(Bike $bike, ?callable $exceptionCallback): void
     {
         try {
+            $doesNotNeedResponsible = $bike->getIsResolved() || $bike->getResponsible();
+            if ($doesNotNeedResponsible) {
+                return;
+            }
             $this->doctrineUtils->executeCallableInTransaction(static function (EntityManagerInterface $entityManager) use ($bike) {
-                $availableOfficer = $this->entityManager->getRepository(Police::class)->findOneBy(['isAvailable' => true]);
+                $availableOfficer = $entityManager->getRepository(Police::class)->findOneBy(['isAvailable' => true]);
                 if ($availableOfficer instanceof Police) {
                     $availableOfficer->setIsAvailable(false);
                     $bike->setResponsible($availableOfficer);
@@ -127,9 +131,10 @@ class BikeFactory extends BaseFactory
                 $responsibleOfficer = $bike->getResponsible();
                 $isNotEngagedOfficer = $bike->getIsResolved() || $responsibleOfficer === null;
                 if ($isNotEngagedOfficer) {
-                    $entityManager->persist($responsibleOfficer);
-                    $responsibleOfficer->setIsAvailable(true);
+                    return;
                 }
+                $entityManager->persist($responsibleOfficer);
+                $responsibleOfficer->setIsAvailable(true);
             });
         } catch (TransactionException $e) {
             $exceptionCallback($e);

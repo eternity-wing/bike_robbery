@@ -13,6 +13,12 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use App\Services\Doctrine\Utils as DoctrineUtils;
 
+/**
+ * Class PoliceFactoryTest
+ * @package App\Tests\Factory
+ *
+ * @author Wings <Eternity.mr8@gmail.com>
+ */
 class PoliceFactoryTest extends KernelTestCase
 {
     /**
@@ -84,7 +90,7 @@ class PoliceFactoryTest extends KernelTestCase
                 'stealingDate' => new \DateTime('now'),
                 'responsible' => null
             ];
-            $availablePolice = $this->bikeFactory->create($bikeData);
+            $availableBike = $this->bikeFactory->create($bikeData);
         }
 
 
