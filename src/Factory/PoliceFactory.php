@@ -5,11 +5,13 @@ namespace App\Factory;
 
 use App\Entity\Bike;
 use App\Entity\Police;
+use App\Exception\InvalidObjectException;
 use App\Exception\TransactionException;
 use Doctrine\DBAL\ConnectionException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use App\Services\Doctrine\Utils as DoctrineUtils;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
  * Class PoliceFactory
@@ -31,10 +33,28 @@ class PoliceFactory extends BaseFactory
      * @param ContainerInterface $container
      * @param DoctrineUtils $doctrineUtils
      */
-    public function __construct(EntityManagerInterface $manager, ContainerInterface $container, DoctrineUtils $doctrineUtils)
+    public function __construct(EntityManagerInterface $manager, ContainerInterface $container, ValidatorInterface $validator, DoctrineUtils $doctrineUtils)
     {
-        parent::__construct($manager, $container);
+        parent::__construct($manager, $container, $validator);
         $this->doctrineUtils = $doctrineUtils;
+    }
+
+
+    /**
+     * @param array $data
+     * @return Police
+     * @throws InvalidObjectException
+     */
+    public function create(array $data): Police
+    {
+        ['personalCode' => $personalCode, 'fullName' => $fullName, 'isAvailable' => $isAvailable] = $data;
+        $police = new Police();
+        $police->setPersonalCode($personalCode);
+        $police->setFullName($fullName);
+        $police->setIsAvailable($isAvailable);
+        $this->validate($police);
+        $this->store($police);
+        return $police;
     }
 
     /**
@@ -44,6 +64,7 @@ class PoliceFactory extends BaseFactory
     {
         $this->entityManager->persist($police);
         $this->entityManager->flush();
+        $this->entityManager->refresh($police);
     }
 
     /**
@@ -54,6 +75,10 @@ class PoliceFactory extends BaseFactory
     public function assignResponsibility(Police $police, ?callable $exceptionCallback): void
     {
         try {
+            $isResponsibilityAlreadyAssigned = !$police->getIsAvailable();
+            if ($isResponsibilityAlreadyAssigned) {
+                return;
+            }
             $this->doctrineUtils->executeCallableInTransaction(static function (EntityManagerInterface $entityManager) use ($police) {
                 $bikeNeedsResponsible = $entityManager->getRepository(Bike::class)->findOneBikeNeedsResponsible();
                 if ($bikeNeedsResponsible instanceof Bike) {
@@ -78,7 +103,7 @@ class PoliceFactory extends BaseFactory
         try {
             $this->doctrineUtils->executeCallableInTransaction(static function (EntityManagerInterface $entityManager) use ($police) {
                 $noneResolveBike = $entityManager->getRepository(Bike::class)
-                    ->findOneBy(['responsible' => $police, 'isResolved' => true]);
+                    ->findOneBy(['responsible' => $police, 'isResolved' => false]);
                 if ($noneResolveBike instanceof Bike) {
                     $entityManager->persist($noneResolveBike);
                     $noneResolveBike->setResponsible(null);

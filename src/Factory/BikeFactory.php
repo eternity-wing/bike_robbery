@@ -5,11 +5,13 @@ namespace App\Factory;
 
 use App\Entity\Bike;
 use App\Entity\Police;
+use App\Exception\InvalidObjectException;
 use App\Services\Doctrine\Utils as DoctrineUtils;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use App\Exception\TransactionException;
 use Doctrine\DBAL\ConnectionException;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
  * Class BikeFactory
@@ -30,11 +32,34 @@ class BikeFactory extends BaseFactory
      * @param ContainerInterface $container
      * @param DoctrineUtils $doctrineUtils
      */
-    public function __construct(EntityManagerInterface $manager, ContainerInterface $container, DoctrineUtils $doctrineUtils)
+    public function __construct(EntityManagerInterface $manager, ContainerInterface $container, ValidatorInterface $validator, DoctrineUtils $doctrineUtils)
     {
-        parent::__construct($manager, $container);
+        parent::__construct($manager, $container, $validator);
         $this->doctrineUtils = $doctrineUtils;
     }
+
+
+    /**
+     * @param array $data
+     * @return Police
+     * @throws InvalidObjectException
+     */
+    public function create(array $data): Police
+    {
+        $bike = new Bike();
+        $bike->setOwnerFullName($data['ownerFullName']);
+        $bike->setIsResolved($data['isResolved']);
+        $bike->setColor($data['color']);
+        $bike->setLicenseNumber($data['licenseNumber']);
+        $bike->setStealingDescription($data['stealingDescription']);
+        $bike->setStealingDate($data['stealingDate']);
+        $bike->setType($data['type']);
+        $bike->setResponsible($data['responsible']);
+        $this->validate($bike);
+        $this->store($bike);
+        return $bike;
+    }
+
 
     /**
      * @param Bike $bike
