@@ -29,13 +29,14 @@ class UtilsTest extends BaseKernelTest
     public function testExecuteCallableInTransaction()
     {
         do {
-            $randomPersonalCode = Utils::generateRandomString(20);
+            $randomString = Utils::generateRandomString(20);
+            $randomPersonalCode = "PCD-{$randomString}";
             $police = $this->entityManager->getRepository(Police::class)->findOneBy(['personalCode' => $randomPersonalCode]);
         } while ($police);
 
         $police = new Police();
-        $police->setFullName("officer-{$randomPersonalCode}");
-        $police->setPersonalCode("PCD-{$randomPersonalCode}");
+        $police->setFullName("officer-{$randomString}");
+        $police->setPersonalCode($randomPersonalCode);
 
 
         $this->doctrineUtils->executeCallableInTransaction(static function (\Doctrine\ORM\EntityManager $entityManager) use ($police) {
