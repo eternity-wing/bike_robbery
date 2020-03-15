@@ -10,8 +10,6 @@ use App\Tests\Controller\API\APIBaseKernelTest;
 
 class PoliceControllerTest extends APIBaseKernelTest
 {
-
-
     public function testGetBikes()
     {
         $response = $this->client->request('GET', $this->prependBaseApiUrl('bikes'));
@@ -78,7 +76,7 @@ class PoliceControllerTest extends APIBaseKernelTest
     public function testShouldGetPolice()
     {
         $police = $this->entityManager->getRepository(Police::class)->findOneBy([]);
-        if($police){
+        if ($police) {
             $response = $this->client->get($this->prependBaseApiUrl("polices/{$police->getId()}"));
             $responseContent = json_decode($response->getBody()->getContents(), true);
             $this->assertEquals($responseContent['id'], $police->getId());
@@ -91,7 +89,7 @@ class PoliceControllerTest extends APIBaseKernelTest
     public function testShouldDeleteUnAvailablePolice()
     {
         $police = $this->entityManager->getRepository(Police::class)->findOneBy(['isAvailable' => false]);
-        if($police === null){
+        if ($police === null) {
             $this->assertTrue(true);
             return;
         }
@@ -101,13 +99,10 @@ class PoliceControllerTest extends APIBaseKernelTest
 
         $this->assertEquals($response->getStatusCode(), 204);
 
-        if($availableAssignedBike){
+        if ($availableAssignedBike) {
             $this->entityManager->refresh($availableAssignedBike);
             $this->assertNull($availableAssignedBike->getResponsible());
         }
-
-
-
     }
 
 
