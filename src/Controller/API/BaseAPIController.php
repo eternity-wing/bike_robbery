@@ -8,6 +8,7 @@ use App\Exception\InvalidJsonFormatException;
 use App\Services\FormDataSubmitter;
 use App\Services\Utils;
 use JMS\Serializer\SerializationContext;
+use JMS\Serializer\SerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,7 +29,7 @@ class BaseAPIController extends AbstractController
     const DEFAULT_PAGE_SIZE = 25;
 
     /**
-     * @var Serializer
+     * @var SerializerInterface
      */
     private $serializer;
 
@@ -40,18 +41,19 @@ class BaseAPIController extends AbstractController
 
     /**
      * BaseAPIController constructor.
+     * @param SerializerInterface $serializer
      * @param FormDataSubmitter $formDataSubmitter
      */
-    public function __construct(FormDataSubmitter $formDataSubmitter)
+    public function __construct(SerializerInterface $serializer, FormDataSubmitter $formDataSubmitter)
     {
-        $this->serializer = SerializerBuilder::create()->build();
+        $this->serializer = $serializer;
         $this->formDataSubmitter = $formDataSubmitter;
     }
 
     /**
-     * @return Serializer
+     * @return SerializerInterface
      */
-    public function getSerializer(): Serializer
+    public function getSerializer():SerializerInterface
     {
         return $this->serializer;
     }

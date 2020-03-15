@@ -68,7 +68,7 @@ class PoliceController extends BaseController
         }
         $policeFactory->store($police);
         $policeFactory->assignResponsibility($police, null);
-        return $this->createApiResponse($police);
+        return $this->createApiResponse($police, 201);
     }
 
 
@@ -77,7 +77,7 @@ class PoliceController extends BaseController
      */
     public function delete(Police $police, PoliceFactory $policeFactory): Response
     {
-        $policeFactory->delete($police);
-        return $this->createApiResponse([]);
+        $policeFactory->delete($police, null);
+        return $this->createApiResponse([], 204);
     }
 }

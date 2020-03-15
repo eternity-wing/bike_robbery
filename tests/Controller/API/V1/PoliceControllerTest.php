@@ -3,6 +3,7 @@
 
 namespace App\Tests\Controller\API\V1;
 
+use App\Entity\Bike;
 use App\Entity\Police;
 use App\Services\Utils;
 use App\Tests\Controller\API\APIBaseKernelTest;
@@ -74,17 +75,43 @@ class PoliceControllerTest extends APIBaseKernelTest
         $this->assertLessThan(500, $statusCode);
     }
 
-//    public function testShouldGetPoliceFromApi()
-//    {
-//        $police = $this->entityManager->getRepository(Police::class)->findOneBy([]);
-//        if($police){
-//            $response = $this->client->get($this->prependBaseApiUrl("polices/{$police->getId()}"));
-//            $responseContent = json_decode($response->getBody()->getContents(), true);
-//            $this->assertEquals($responseContent['id'], $police->getId());
-//            $this->assertEquals($response->getStatusCode(), 200);
-//        }
-//        $this->assertTrue(true);
-//    }
+    public function testShouldGetPolice()
+    {
+        $police = $this->entityManager->getRepository(Police::class)->findOneBy([]);
+        if($police){
+            $response = $this->client->get($this->prependBaseApiUrl("polices/{$police->getId()}"));
+            $responseContent = json_decode($response->getBody()->getContents(), true);
+            $this->assertEquals($responseContent['id'], $police->getId());
+            $this->assertEquals($response->getStatusCode(), 200);
+        }
+        $this->assertTrue(true);
+    }
+
+
+    public function testShouldDeleteUnAvailablePolice()
+    {
+        $police = $this->entityManager->getRepository(Police::class)->findOneBy(['isAvailable' => false]);
+        if($police === null){
+            $this->assertTrue(true);
+            return;
+        }
+        $availableAssignedBike = $this->entityManager->getRepository(Bike::class)->findOneBy(['responsible' => $police, 'isResolved' => false]);
+
+        $response = $this->client->delete($this->prependBaseApiUrl("polices/{$police->getId()}"));
+
+        $this->assertEquals($response->getStatusCode(), 204);
+
+        if($availableAssignedBike){
+            $this->entityManager->refresh($availableAssignedBike);
+            $this->assertNull($availableAssignedBike->getResponsible());
+        }
+
+
+
+    }
+
+
+
 
 
 

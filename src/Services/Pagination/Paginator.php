@@ -30,6 +30,12 @@ class Paginator implements PaginatorInterface
         $result = $paginator->getQuery()->setFirstResult($limit * ($currentPage - 1))
             ->setMaxResults($limit)->getResult();
 
-        return ['totalItems' => $totalItems, 'pageCount' => $pagesCount, 'items' => $result];
+        return [
+            'total_items' => $totalItems,
+            'page_count' => $pagesCount,
+            'current_page' => $currentPage,
+            'page_size' => $limit,
+            'items' => $result,
+            ];
     }
 }

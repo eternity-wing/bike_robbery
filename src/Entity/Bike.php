@@ -6,11 +6,43 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
+use Hateoas\Configuration\Annotation as Hateoas;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\BikeRepository")
  * @UniqueEntity("licenseNumber")
  * @JMS\ExclusionPolicy("all")
+ * @Hateoas\Relation(
+ *      "self",
+ *      href = @Hateoas\Route(
+ *          "api_v1_bikes_show",
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      )
+ * )
+ * @Hateoas\Relation(
+ *      "edit",
+ *      href = @Hateoas\Route(
+ *          "api_v1_bikes_edit",
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      )
+ * )
+ *
+ * @Hateoas\Relation(
+ *      "delete",
+ *      href = @Hateoas\Route(
+ *          "api_v1_bikes_delete",
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      )
+ * )
+ *
+ * @Hateoas\Relation(
+ *      "resolve",
+ *      href = @Hateoas\Route(
+ *          "api_v1_bikes_resolve",
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      )
+ * )
+ *
  */
 class Bike
 {
